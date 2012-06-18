@@ -5,8 +5,8 @@ import tornado
 
 import api_base
 
-class IndexHandler(api_base.BaseHandler):
-    """A simple API for test.
+class RootHandler(api_base.BaseHandler):
+    """Root API that validates credentials.
     """
 
     api_path = '/'
