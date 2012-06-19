@@ -40,6 +40,13 @@ class BaseHandler(tornado.web.RequestHandler):
         else:
             return None
 
+    def get_user_role(self):
+        """Get the role of user, can be fellow or admin."""
+
+        role = self.mongo.user.find_one({'_id': login},
+                {'role': 1})['role']
+        return role
+
     def str2bool(self, v):
         if isinstance(v, bool):
             return v
