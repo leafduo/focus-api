@@ -43,9 +43,12 @@ class UserHandler(api_base.BaseHandler):
 
         self.req['created_at'] = int(time.time())
 
-        self.mongo.user.insert({"_id": self.req['email'], "first_name":
-            self.req['first_name'], "last_name": self.req['last_name'],
-            "role": self.req['role']})
+        try:
+            self.mongo.user.insert({"_id": self.req['email'], "first_name":
+                self.req['first_name'], "last_name": self.req['last_name'],
+                "role": self.req['role']})
+        except pymongo.errors.DuplicateKeyError:
+            raise tornado.web.HTTPError(422)
 
 class ActivityHandler(api_base.BaseHandler):
     """Post and view activities."""
