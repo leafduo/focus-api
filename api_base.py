@@ -43,7 +43,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_user_role(self):
         """Get the role of user, can be fellow or admin."""
 
-        role = self.mongo.user.find_one({'_id': login},
+        role = self.mongo.user.find_one({'_id': self.current_user},
                 {'role': 1})['role']
         return role
 

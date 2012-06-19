@@ -29,7 +29,7 @@ class UserHandler(api_base.BaseHandler):
     def post(self):
         """Create a new user."""
 
-        if self.get_user_role != 'admin':
+        if self.get_user_role() != 'admin':
             raise tornado.web.HTTPError(403)
 
         try:
@@ -38,13 +38,14 @@ class UserHandler(api_base.BaseHandler):
         except KeyError:
             raise tornado.web.HTTPError(400)
 
-        if role not in ('fellow', 'admin'):
+        if self.req['role'] not in ('fellow', 'admin'):
             raise tornado.web.HTTPError(400)
 
         self.req['created_at'] = int(time.time())
 
-        self.mongo.user.insert({"_id": email, "first_name": first_name,
-            "last_name": last_name, "role": role})
+        self.mongo.user.insert({"_id": self.req['email'], "first_name":
+            self.req['first_name'], "last_name": self.req['last_name'],
+            "role": self.req['role']})
 
 class ActivityHandler(api_base.BaseHandler):
     """Post and view activities."""
