@@ -52,7 +52,7 @@ class Application(tornado.web.Application):
 def main():
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application(), xheaders=True)
-    http_server.listen(options.port, address="127.0.0.1")
+    http_server.listen(options.port, address="0.0.0.0")
 
     #Enable autoreload in debug mode
     try:
