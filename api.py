@@ -5,6 +5,7 @@ import datetime
 import time
 import tornado
 import pymongo
+from bson.objectid import ObjectId
 
 import api_base
 
@@ -89,3 +90,27 @@ class ActivityHandler(api_base.BaseHandler):
         for activity in activity_array:
             del(activity['_id'])
             self.res['activity'].append(activity)
+
+class CommentHandler(api_base.BaseHandler):
+    """respond to an activity."""
+
+    api_path = '/activity/(.*)/comment'
+
+    @api_base.auth
+    @api_base.json
+    def post(self, activity_id):
+        activity_id = ObjectId(activity_id)
+        activity = self.mongo.activity.find_one({'_id': activity_id})
+        if activity is None:
+            raise tornado.web.HTTPError(404)
+        comment = {}
+        comment['description'] = self.req['description']
+        comment['created_at'] = int(time.time())
+        comment['owner'] = self.current_user
+        if activity.has_key('comment'):
+            activity['comment'].append(comment)
+        else: 
+            activity['comment'] = [comment]
+        self.mongo.activity.update({'_id': activity_id}, 
+                {"$set": {'comment': activity['comment']}} )
+    
