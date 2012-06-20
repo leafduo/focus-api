@@ -50,6 +50,68 @@ class UserHandler(api_base.BaseHandler):
                 "role": self.req['role']})
         except pymongo.errors.DuplicateKeyError:
             raise tornado.web.HTTPError(422)
+            
+class ProfileHandler(api_base.BaseHandler):
+    """Get/Delete/Update user profile
+    """
+    api_path = '/profile/(.*)' 
+    profile_key_modifiable = ('first_name', 'last_name', 'password')
+    profile_key_checkable = ('first_name', 'last_name', 'role')
+    
+    @api_base.auth
+    @api_base.json        
+    def get(self,  mail):
+        """Get user profile"""
+        
+        profile = self.mongo.user.find_one({"_id" : mail})
+        
+        if (profile == None):
+            raise tornado.web.HTTPError(404)
+        
+        for profile_key in profile.keys():
+            if profile_key not in profile_key_checkable:
+                del(profile[profile_key])        
+        self.res = profile
+        
+    @api_base.auth
+    @api_base.json        
+    def delete(self, mail):
+        """Delete user profile"""
+
+        if self.get_user_role() != 'admin':
+            raise tornado.web.HTTPError(403)
+
+        profile = self.mongo.user.find_one({"_id" : mail})
+        
+        if (profile == None):
+            raise tornado.web.HTTPError(404)
+        
+        self.mongo.user.remove({"_id" : mail})
+
+    @api_base.auth
+    @api_base.json
+    def put(self, email):
+        """Modify a user profiles."""
+
+        if self.get_user_role() != 'admin' and \
+        not (self.get_user_role() == 'fellow' and self.req['email'] == self.current_user):
+            raise tornado.web.HTTPError(403)
+
+        if self.mongo.user.find_one({'_id': self.req['email']}) is None:
+            raise tornado.web.HTTPError(404)
+
+        date = {}
+        for key in ('password', 'first_name', 'last_name', 'gender'):
+            if self.req.has_key(key):
+                date[key] = str(self.req[key])
+                if key == 'password':
+                    from password import Password
+                    date[key] = Password.encrypt(date[key])
+        try:
+            self.mongo.user.update({'_id': self.req['email']}, {'$set': date})
+        except pymongo.errors.DuplicateKeyError:
+            raise tornado.web.HTTPError(422)
+
 
 class ActivityHandler(api_base.BaseHandler):
     """Post and view activities."""
