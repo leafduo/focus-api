@@ -61,7 +61,8 @@ class ActivityHandler(api_base.BaseHandler):
         try:
             for key in ('title', 'description', 'type'):
                 self.req[key] = str(self.req[key])
-                publish = self.req['publish']
+
+            self.req['publish'] = bool(self.req['publish'])
 
             for key in ('start_at', 'end_at'):
                 self.req[key] = int(self.req[key])
