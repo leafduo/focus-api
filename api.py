@@ -51,6 +51,13 @@ class UserHandler(api_base.BaseHandler):
         except pymongo.errors.DuplicateKeyError:
             raise tornado.web.HTTPError(422)
 
+def restrict_to(d, it):
+    """delete all items in dictionary except items whose keys in it (iterable)"""
+    for k in d.keys():
+        if k not in it:
+            del d[k]
+    return d
+
 class ProfileHandler(api_base.BaseHandler):
     """Get/Delete/Update user profile
     """
@@ -59,22 +66,18 @@ class ProfileHandler(api_base.BaseHandler):
     profile_key_checkable = ('first_name', 'last_name', 'role')
 
     @api_base.auth
-    @api_base.json
-    def get(self,  email):
+    def get(self, email):
         """Get user profile"""
 
         profile = self.mongo.user.find_one({"_id" : email})
+        #print(profile)
 
         if (profile is None):
             raise tornado.web.HTTPError(404)
 
-        for profile_key in profile.keys():
-            if profile_key not in profile_key_checkable:
-                del(profile[profile_key])
-        self.res = profile
+        self.res = restrict_to(profile, self.profile_key_checkable)
 
     @api_base.auth
-    @api_base.json
     def delete(self, email):
         """Delete user profile"""
 
@@ -91,25 +94,23 @@ class ProfileHandler(api_base.BaseHandler):
     @api_base.auth
     @api_base.json
     def put(self, email):
-        """Modify a user profiles.
+        """Modify user profile.
         """
 
         if self.get_user_role() != 'admin' and \
-        not (self.get_user_role() == 'fellow' and self.req['email'] == self.current_user):
+        not (self.get_user_role() == 'fellow' and email == self.current_user):
             raise tornado.web.HTTPError(403)
 
-        if self.mongo.user.find_one({'_id': self.req['email']}) is None:
+        if self.mongo.user.find_one({'_id': email}) is None:
             raise tornado.web.HTTPError(404)
 
-        date = {}
-        for key in profile_key_modifiable:
-            if self.req.has_key(key):
-                date[key] = str(self.req[key])
-                if key == 'password':
-                    from password import Password
-                    date[key] = Password.encrypt(date[key])
+        restrict_to(self.req, self.profile_key_modifiable)
+        if self.req.has_key('password'):
+            from password import Password
+            self.req['password'] = Password.encrypt(self.req['password'])
+
         try:
-            self.mongo.user.update({'_id': self.req['email']}, {'$set': date})
+            self.mongo.user.update({'_id': email}, {'$set': self.req})
         except pymongo.errors.DuplicateKeyError:
             raise tornado.web.HTTPError(422)
 
