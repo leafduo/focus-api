@@ -28,22 +28,22 @@ class UserHandler(api_base.BaseHandler):
 
     api_path = 'guser/([^/]*)'
     profile_key_modifiable = ('first_name', 'last_name', 'password',
-            'status', 'gender',  'language',  'work_field',  'location',
-            'population_target', 'mobile_countrycode',  'mobile',
-            'email_type', 'street', 'city',  'province',  'zip',  'country',
-            'skype_ID', 'organization_address',  'organization_name',
-            'organization_acronym',  'organization_formed_date',
-            'organization_website',  'organization_type',
-            'organization_employee_num',  'organization_budget',
-            'organization_phone_countrycode',  'organization_phone')
+            'status', 'gender', 'language', 'work_field', 'location',
+            'population_target', 'mobile_countrycode', 'mobile',
+            'email_type', 'street', 'city', 'province', 'zip', 'country',
+            'skype_ID', 'organization_address', 'organization_name',
+            'organization_acronym', 'organization_formed_date',
+            'organization_website', 'organization_type',
+            'organization_employee_num', 'organization_budget',
+            'organization_phone_countrycode', 'organization_phone')
     profile_key_checkable = ('first_name', 'last_name', 'status', 'role',
-            'gender',  'language',  'work_field',  'location',
-            'population_target', 'mobile_countrycode',  'mobile',
-            'email_type',  'street',  'city',  'province',  'zip',
-            'country',  'skype_ID', 'organization_address',
-            'organization_name',  'organization_acronym',
+            'gender', 'language', 'work_field', 'location',
+            'population_target', 'mobile_countrycode', 'mobile',
+            'email_type', 'street', 'city', 'province', 'zip',
+            'country', 'skype_ID', 'organization_address',
+            'organization_name', 'organization_acronym',
             'organization_formed_date', 'organization_website',
-            'organization_type',  'organization_employee_num',
+            'organization_type', 'organization_employee_num',
             'organization_budget', 'organization_phone_countrycode',
             'organization_phone')
     profile_key_enum = {'gender':('male', 'female', 'secrecy'),
@@ -55,8 +55,8 @@ class UserHandler(api_base.BaseHandler):
                 '101-150', '151-200', 'more than 200'),
             'organization_budget':('less than $50,000', '$50,000-$100000',
                 '$100,000-$200,000','$200,000-$500,000',
-                '$500,000-$1,000,000', '$1,000,000-$5,000,000',
-                '$5,000,000-$10,000,000', 'more than $10,000,000')}
+              '$500,000-$1,000,000', '$1,000,000-$5,000,000',
+              '$5,000,000-$10,000,000', 'more than $10,000,000')}
 
     def restrict_to(self, d, it):
         """delete all items in dictionary except items whose keys in it (iterable)"""
