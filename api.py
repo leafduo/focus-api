@@ -37,6 +37,11 @@ class UserHandler(api_base.BaseHandler):
                                'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
                                'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
                                'organization_phone_ countrycode',  'organization_phone')
+    profile_key_enum = {'gender':('male', 'female', 'secrecy'), 'role':('admin', 'fellow'), 'email_type':('home', 'business'),  \
+                        'organization_type':('Private sector','Government Agency','Multilateral'),  \
+                        'organization_employee_num':('less than 10', '11-25', '26-40', '41-60', '61-80', '81-100', '101-150', '151-200', 'more than 200'), \
+                        'organization_budget':('less than $50,000', '$50,000-$100000','$100,000-$200,000','$200,000-$500,000', \
+                        '$500,000-$1,000,000', '$1,000,000-$5,000,000', '$5,000,000-$10,000,000', 'more than $10,000,000')}
 
     def restrict_to(self, d, it):
         """delete all items in dictionary except items whose keys in it (iterable)"""
@@ -123,6 +128,11 @@ class UserHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(404)
 
         self.restrict_to(self.req, self.profile_key_modifiable)
+        for key in self.req.keys():
+            if k in self.profile_key_enum.keys():
+                if self.req[key] not in self.profile_key_enum[key]:
+                    raise tornado.web.HTTPError(400)
+
         if self.req.has_key('password'):
             from password import Password
             self.req['password'] = Password.encrypt(self.req['password'])
