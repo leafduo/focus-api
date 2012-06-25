@@ -6,6 +6,9 @@ import time
 import tornado
 import pymongo
 from bson.objectid import ObjectId
+import smtplib
+from random import choice
+import string
 
 import api_base
 
@@ -18,7 +21,7 @@ class RootHandler(api_base.BaseHandler):
     @api_base.auth
     def get(self):
         """Print a simple welcome message"""
-
+        
 class UserHandler(api_base.BaseHandler):
     """User handler, which can create user and modify user profiles.
     """
@@ -50,6 +53,18 @@ class UserHandler(api_base.BaseHandler):
                 "role": self.req['role']})
         except pymongo.errors.DuplicateKeyError:
             raise tornado.web.HTTPError(422)
+
+        # send activation email
+        cookbook = string.ascii_letters + string.digits
+        link = ''.join([choice(cookbook) for i in range(0,64)])
+        msg = 'This is from focus team, here is your activation link: \r\n' + link
+        try:
+            sendmail(self.req['email'], msg)
+        except smtplib.SMTPHeloError:
+            raise tornado.web.HTTPError(500)
+
+        self.mongo.user.update({"_id": self.req['email']},
+                {"$set": {"validation_link": link}}) 
 
 class ActivityHandler(api_base.BaseHandler):
     """Post and view activities."""
@@ -114,3 +129,23 @@ class CommentHandler(api_base.BaseHandler):
         self.mongo.activity.update({'_id': activity_id}, 
                 {"$set": {'comment': activity['comment']}} )
     
+class ActivationHandler(api_base.BaseHandler):
+    """activate the user"""
+
+    api_path = '/user/validation/(\w+)'
+
+    @api_base.auth
+    def get(self, validation_link):
+        self.mongo.user.update({"validation_link": validation_link}, 
+                {"$unset": {"validation_link": 1}})
+
+def sendmail(toaddr, msg):
+    """utility to send mail"""
+
+    server = 'smtp.qq.com'
+    fromaddr = '324823396@qq.com'
+    s = smtplib.SMTP(server)
+    s.set_debuglevel(1)
+    s.login("324823396@qq.com","5gmailqq")
+    s.sendmail(fromaddr,toaddr,msg)
+    s.quit()
