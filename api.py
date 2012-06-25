@@ -177,8 +177,58 @@ class ActivityHandler(api_base.BaseHandler):
     def get(self):
         offset = self.get_argument('offset', 0)
         limit = self.get_argument('limit', 20)
-        activity_array = self.mongo.activity.find(). \
-                sort([('created_at', pymongo.DESCENDING)]).skip(offset).limit(limit)
+        activity_type = self.get_argument('type', None)
+        sort_by = self.get_argument('sort_by', None)
+        event_type = self.get_argument('event_type', None) #not used now
+
+        offset = int(offset)
+        limit = int(limit)
+        if activity_type not in (None, 'offer', 'need', 'event'):
+            raise tornado.web.HTTPError(400)
+        if sort_by not in (None, 'most_followed', 'most_recent'):
+            raise tornado.web.HTTPError(400)
+        if event_type not in (None, 'upcoming', 'past', 'ongoing'):
+            raise tornado.web.HTTPError(400)
+
+        activities = self.mongo.activity
+        fieldh = ''
+        sort = [('created_at', pymongo.DESCENDING)]
+        if sort_by == 'most_followed':
+            from bson.code import Code
+            mapper = Code("""
+                function () {
+                    activity = {}
+                    for (var key in this) {
+                        activity[key] = this[key]
+                    }
+                    if ('followed' in this) {
+                        activity['followed_count'] = this.followed.length
+                    } else {
+                        activity['followed_count'] = 0
+                    }
+                    emit(this._id, activity)
+                }""")
+            reducer = Code("""
+                function (key, vals) {
+                    return vals;
+                }
+                """)
+            activities = activities.map_reduce(mapper, reducer, 'tmp')
+            fieldh = 'value.'
+            sort = [('value.followed_count', pymongo.DESCENDING)]
+
+        query = {}
+        if activity_type:
+            query[fieldh + 'type'] = activity_type
+
+        activity_array = activities.find(query).sort(sort).skip(offset).limit(limit)
+
+        if sort_by == 'most_followed':
+            def to_activity(wrapped):
+                del wrapped['value']['followed_count']
+                return wrapped['value']
+            activity_array = map(to_activity, activity_array)
+
         self.res = {'activity': []}
         for activity in activity_array:
             activity['id']=str(activity['_id'])
