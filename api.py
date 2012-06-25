@@ -59,7 +59,7 @@ class ProfileHandler(api_base.BaseHandler):
     profile_key_modifiable = ('first_name', 'last_name', 'password')
     profile_key_checkable = ('first_name', 'last_name', 'role')
 
-    def restrict_to(d, it):
+    def restrict_to(self, d, it):
         """delete all items in dictionary except items whose keys in it (iterable)"""
         for k in d.keys():
             if k not in it:
