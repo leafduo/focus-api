@@ -31,12 +31,12 @@ class UserHandler(api_base.BaseHandler):
                                'mobile_countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
                                'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
                                'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
-                               'organization_phone_ countrycode',  'organization_phone')
+                               'organization_phone_countrycode',  'organization_phone')
     profile_key_checkable = ('first_name', 'last_name', 'status', 'role',  'gender',  'language',  'work_field',  'location',  'population_target', \
                                'mobile_countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
                                'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
                                'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
-                               'organization_phone_ countrycode',  'organization_phone')
+                               'organization_phone_countrycode',  'organization_phone')
     profile_key_enum = {'gender':('male', 'female', 'secrecy'), 'role':('admin', 'fellow'), 'email_type':('home', 'business'),  \
                         'organization_type':('Private sector','Government Agency','Multilateral'),  \
                         'organization_employee_num':('less than 10', '11-25', '26-40', '41-60', '61-80', '81-100', '101-150', '151-200', 'more than 200'), \
