@@ -110,7 +110,6 @@ class UserHandler(api_base.BaseHandler):
         """Get user profile"""
 
         profile = self.mongo.user.find_one({"_id" : email})
-        #print(profile)
 
         if (profile is None):
             raise tornado.web.HTTPError(404)
