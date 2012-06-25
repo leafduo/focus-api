@@ -90,7 +90,7 @@ class UserHandler(api_base.BaseHandler):
                 "role": self.req['role']})
         except pymongo.errors.DuplicateKeyError:
             raise tornado.web.HTTPError(422)
-        self.mongo.user.insert({'_id': login}, {'following': [], 'followed':
+        self.mongo.user.insert({'_id': login}, {'following': [], 'follower':
             [], 'tags_following': [], 'activity_following': []})
 
         # send activation email
@@ -137,8 +137,9 @@ class UserHandler(api_base.BaseHandler):
         """
 
         if self.get_user_role() != 'admin' and \
-        not (self.get_user_role() == 'fellow' and email == self.current_user):
-            raise tornado.web.HTTPError(403)
+                not (self.get_user_role() == 'fellow' and \
+                email == self.current_user):
+                    raise tornado.web.HTTPError(403)
 
         if self.mongo.user.find_one({'_id': email}) is None:
             raise tornado.web.HTTPError(404)
@@ -187,7 +188,7 @@ class ActivityHandler(api_base.BaseHandler):
 
         activity_id = self.mongo.activity.insert(self.req)
         self.set_status(201)
-        self.set_header('Location', '/activity/'+str(activity_id))
+        self.set_header('Location', '/activity/' + str(activity_id))
 
     @api_base.auth
     def get(self):
@@ -247,7 +248,7 @@ class ActivityHandler(api_base.BaseHandler):
 
         self.res = {'activity': []}
         for activity in activity_array:
-            activity['id']=str(activity['_id'])
+            activity['id'] = str(activity['_id'])
             del(activity['_id'])
             self.res['activity'].append(activity)
 
