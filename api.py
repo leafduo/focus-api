@@ -51,19 +51,21 @@ class UserHandler(api_base.BaseHandler):
         except pymongo.errors.DuplicateKeyError:
             raise tornado.web.HTTPError(422)
 
-def restrict_to(d, it):
-    """delete all items in dictionary except items whose keys in it (iterable)"""
-    for k in d.keys():
-        if k not in it:
-            del d[k]
-    return d
-
 class ProfileHandler(api_base.BaseHandler):
     """Get/Delete/Update user profile
     """
     api_path = '/profile/(.*)'
+
     profile_key_modifiable = ('first_name', 'last_name', 'password')
     profile_key_checkable = ('first_name', 'last_name', 'role')
+
+    def restrict_to(d, it):
+        """delete all items in dictionary except items whose keys in it (iterable)"""
+        for k in d.keys():
+            if k not in it:
+                del d[k]
+        return d
+
 
     @api_base.auth
     def get(self, email):
@@ -75,7 +77,7 @@ class ProfileHandler(api_base.BaseHandler):
         if (profile is None):
             raise tornado.web.HTTPError(404)
 
-        self.res = restrict_to(profile, self.profile_key_checkable)
+        self.res = self.restrict_to(profile, self.profile_key_checkable)
 
     @api_base.auth
     def delete(self, email):
@@ -104,7 +106,7 @@ class ProfileHandler(api_base.BaseHandler):
         if self.mongo.user.find_one({'_id': email}) is None:
             raise tornado.web.HTTPError(404)
 
-        restrict_to(self.req, self.profile_key_modifiable)
+        self.restrict_to(self.req, self.profile_key_modifiable)
         if self.req.has_key('password'):
             from password import Password
             self.req['password'] = Password.encrypt(self.req['password'])
