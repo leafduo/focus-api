@@ -167,6 +167,29 @@ class ActivityHandler(api_base.BaseHandler):
             del(activity['_id'])
             self.res['activity'].append(activity)
 
+class FollowHandler(api_base.BaseHandler):
+    """Handle follow operations"""
+
+    api_path = '/user/([^/]*)/follow'
+
+    @api_base.auth
+    def get(self, login):
+        self.insert({'_id': login}, {'following': []})
+        self.insert({'_id': login}, {'followed': []})
+        self.insert({'_id': login}, {'tags_following': []})
+        self.insert({'_id': login}, {'activity_following': []})
+        self.res = self.mongo.find_one({'_id': login}, {'following': 1, 'followed': 1,
+            'tags_following': 1, 'activity_following': 1})
+        self.res['email'] = str(login)
+        del self.res['_id']
+
+    @api_base.auth
+    def put(self):
+        for key in ('following', 'followed', 'tags_following',
+                'activity_following'):
+            if has_key(self.req, key):
+                self.update({'_id': login}, {key: self.req[key]})
+
 class CommentHandler(api_base.BaseHandler):
     """respond to an activity."""
 
