@@ -270,7 +270,7 @@ class PutFollowHandler(api_base.BaseHandler):
             self.mongo[follow_key].update({'_id': follow_id},
                     {'$push': {'follower': login}})
         else:
-            self.user.update({'_id': login},
+            self.mongo.user.update({'_id': login},
                     {'$pull': {follow_key: follow_id}})
             self.mongo[follow_key].update({'_id': follow_id},
                     {'$pull': {'follower': login}})
