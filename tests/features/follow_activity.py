@@ -2,12 +2,15 @@ from lettuce import *
 from nose.tools import assert_equals
 import requests
 import subprocess
+import os
 
 @before.each_scenario
 def before(step):
     world.base = 'http://localhost:9000'
-    subprocess.call(['mongorestore', '--db', 'focus',
-        '--drop', 'features/mongodb/'])
+    with open(os.devnull, 'wb') as devnull:
+        subprocess.check_call(['mongorestore', '--db', 'focus',
+            '--drop', 'features/mongodb/'], stdout=devnull,
+            stderr=subprocess.STDOUT)
 
 @step('I am logged in as (.+) with password (.+)')
 def login(step, username, password):
