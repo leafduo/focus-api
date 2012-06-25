@@ -26,7 +26,7 @@ class UserHandler(api_base.BaseHandler):
     """User handler, which can create user and modify user profiles.
     """
 
-    api_path = 'guser/([^/]*)'
+    api_path = '/user/([^/]*)'
     profile_key_modifiable = ('first_name', 'last_name', 'password',
             'status', 'gender', 'language', 'work_field', 'location',
             'population_target', 'mobile_countrycode', 'mobile',
