@@ -56,8 +56,16 @@ class ProfileHandler(api_base.BaseHandler):
     """
     api_path = '/profile/([^/]*)'
 
-    profile_key_modifiable = ('first_name', 'last_name', 'password')
-    profile_key_checkable = ('first_name', 'last_name', 'role')
+    profile_key_modifiable = ('first_name', 'last_name', 'password', 'status', 'gender',  'language',  'work_field',  'location',  'population_target', \
+                               'mobile_ countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
+                               'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
+                               'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
+                               'organization_phone_ countrycode',  'organization_phone')
+    profile_key_checkable = ('first_name', 'last_name', 'status', 'role',  'gender',  'language',  'work_field',  'location',  'population_target', \
+                               'mobile_ countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
+                               'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
+                               'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
+                               'organization_phone_ countrycode',  'organization_phone')
 
     def restrict_to(self, d, it):
         """delete all items in dictionary except items whose keys in it (iterable)"""
@@ -143,7 +151,9 @@ class ActivityHandler(api_base.BaseHandler):
         if not isinstance(self.req['tags'], list):
             raise tornado.web.HTTPError(400)
 
-        self.mongo.activity.insert(self.req)
+        activity_id = self.mongo.activity.insert(self.req)
+        self.set_status(201)
+        self.ser_header('Location', '/activity/'+str(activity_id))
 
     @api_base.auth
     def get(self):
@@ -153,6 +163,7 @@ class ActivityHandler(api_base.BaseHandler):
                 sort([('created_at', pymongo.DESCENDING)]).skip(offset).limit(limit)
         self.res = {'activity': []}
         for activity in activity_array:
+            activity['id']=str(activity['_id'])
             del(activity['_id'])
             self.res['activity'].append(activity)
 
