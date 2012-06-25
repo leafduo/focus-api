@@ -21,16 +21,33 @@ class RootHandler(api_base.BaseHandler):
     @api_base.auth
     def get(self):
         """Print a simple welcome message"""
-        
+
 class UserHandler(api_base.BaseHandler):
     """User handler, which can create user and modify user profiles.
     """
 
-    api_path = '/user'
+    api_path = '/user/([^/]*)'
+    profile_key_modifiable = ('first_name', 'last_name', 'password', 'status', 'gender',  'language',  'work_field',  'location',  'population_target', \
+                               'mobile_ countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
+                               'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
+                               'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
+                               'organization_phone_ countrycode',  'organization_phone')
+    profile_key_checkable = ('first_name', 'last_name', 'status', 'role',  'gender',  'language',  'work_field',  'location',  'population_target', \
+                               'mobile_ countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
+                               'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
+                               'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
+                               'organization_phone_ countrycode',  'organization_phone')
+
+    def restrict_to(self, d, it):
+        """delete all items in dictionary except items whose keys in it (iterable)"""
+        for k in d.keys():
+            if k not in it:
+                del d[k]
+        return d
 
     @api_base.auth
     @api_base.json
-    def post(self):
+    def post(self, id):
         """Create a new user."""
 
         if self.get_user_role() != 'admin':
@@ -64,31 +81,7 @@ class UserHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(500)
 
         self.mongo.user.update({"_id": self.req['email']},
-                {"$set": {"validation_link": link}}) 
-
-class ProfileHandler(api_base.BaseHandler):
-    """Get/Delete/Update user profile
-    """
-    api_path = '/profile/([^/]*)'
-
-    profile_key_modifiable = ('first_name', 'last_name', 'password', 'status', 'gender',  'language',  'work_field',  'location',  'population_target', \
-                               'mobile_ countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
-                               'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
-                               'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
-                               'organization_phone_ countrycode',  'organization_phone')
-    profile_key_checkable = ('first_name', 'last_name', 'status', 'role',  'gender',  'language',  'work_field',  'location',  'population_target', \
-                               'mobile_ countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
-                               'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
-                               'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
-                               'organization_phone_ countrycode',  'organization_phone')
-
-    def restrict_to(self, d, it):
-        """delete all items in dictionary except items whose keys in it (iterable)"""
-        for k in d.keys():
-            if k not in it:
-                del d[k]
-        return d
-
+                {"$set": {"validation_link": link}})
 
     @api_base.auth
     def get(self, email):
@@ -168,7 +161,7 @@ class ActivityHandler(api_base.BaseHandler):
 
         activity_id = self.mongo.activity.insert(self.req)
         self.set_status(201)
-        self.ser_header('Location', '/activity/'+str(activity_id))
+        self.set_header('Location', '/activity/'+str(activity_id))
 
     @api_base.auth
     def get(self):
@@ -227,7 +220,7 @@ class CommentHandler(api_base.BaseHandler):
             activity['comment'] = [comment]
         self.mongo.activity.update({'_id': activity_id},
                 {"$set": {'comment': activity['comment']}} )
-    
+
 class ActivationHandler(api_base.BaseHandler):
     """activate the user"""
 
@@ -235,7 +228,7 @@ class ActivationHandler(api_base.BaseHandler):
 
     @api_base.auth
     def get(self, validation_link):
-        self.mongo.user.update({"validation_link": validation_link}, 
+        self.mongo.user.update({"validation_link": validation_link},
                 {"$unset": {"validation_link": 1}})
 
 def sendmail(toaddr, msg):
