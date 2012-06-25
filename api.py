@@ -235,8 +235,8 @@ class ActivityHandler(api_base.BaseHandler):
             del(activity['_id'])
             self.res['activity'].append(activity)
 
-class FollowHandler(api_base.BaseHandler):
-    """Handle follow operations"""
+class GetFollowHandler(api_base.BaseHandler):
+    """Get follow status."""
 
     api_path = '/user/([^/]*)/follow'
 
@@ -251,12 +251,29 @@ class FollowHandler(api_base.BaseHandler):
         self.res['email'] = str(login)
         del self.res['_id']
 
+class PutFollowHandler(api_base.BaseHandler):
+    """Modify follow status"""
+
+    api_path = '/user/([^/]*)/follow/([^/]*)/([^/]*)'
+
     @api_base.auth
-    def put(self):
-        for key in ('following', 'followed', 'tags_following',
-                'activity_following'):
-            if has_key(self.req, key):
-                self.update({'_id': login}, {key: self.req[key]})
+    @api_base.json
+    def put(self, login, follow_type, follow_id):
+        if self.current_user != login:
+            raise tornado.web.HTTPError(403)
+        if follow_type not in ('user', 'activity', 'tag')
+            raise tornado.web.HTTPError(400)
+
+        if self.req['follow']:
+            self.mongo.user.update({'_id': login},
+                    {'$push': {follow_type: follow_id}})
+            self.mongo['follow_type'].update({'_id': follow_id},
+                    {'$push': {'followed': login}})
+        else:
+            self.user.update({'_id': login},
+                    {'$pull': {follow_type: follow_id}})
+            self.mongo['follow_type'].update({'_id': follow_id},
+                    {'$pull': {'followed': login}})
 
 class CommentHandler(api_base.BaseHandler):
     """respond to an activity."""
