@@ -28,12 +28,12 @@ class UserHandler(api_base.BaseHandler):
 
     api_path = '/user/([^/]*)'
     profile_key_modifiable = ('first_name', 'last_name', 'password', 'status', 'gender',  'language',  'work_field',  'location',  'population_target', \
-                               'mobile_ countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
+                               'mobile_countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
                                'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
                                'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
                                'organization_phone_ countrycode',  'organization_phone')
     profile_key_checkable = ('first_name', 'last_name', 'status', 'role',  'gender',  'language',  'work_field',  'location',  'population_target', \
-                               'mobile_ countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
+                               'mobile_countrycode',  'mobile',  'email_type',  'street',  'city',  'province',  'zip',  'country',  'skype_ID', \
                                'organization_address',  'organization_name',  'organization_acronym',  'organization_formed_date', \
                                'organization_website',  'organization_type',  'organization_employee_num',  'organization_budget', \
                                'organization_phone_ countrycode',  'organization_phone')
@@ -129,7 +129,7 @@ class UserHandler(api_base.BaseHandler):
 
         self.restrict_to(self.req, self.profile_key_modifiable)
         for key in self.req.keys():
-            if k in self.profile_key_enum.keys():
+            if key in self.profile_key_enum.keys():
                 if self.req[key] not in self.profile_key_enum[key]:
                     raise tornado.web.HTTPError(400)
 
