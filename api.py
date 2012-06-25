@@ -75,6 +75,8 @@ class UserHandler(api_base.BaseHandler):
                 "role": self.req['role']})
         except pymongo.errors.DuplicateKeyError:
             raise tornado.web.HTTPError(422)
+        self.mongo.user.insert({'_id': login}, {'following': [], 'followed':
+            [], 'tags_following': [], 'activity_following': []})
 
         # send activation email
         cookbook = string.ascii_letters + string.digits
@@ -242,11 +244,7 @@ class GetFollowHandler(api_base.BaseHandler):
 
     @api_base.auth
     def get(self, login):
-        self.insert({'_id': login}, {'following': []})
-        self.insert({'_id': login}, {'followed': []})
-        self.insert({'_id': login}, {'tags_following': []})
-        self.insert({'_id': login}, {'activity_following': []})
-        self.res = self.mongo.find_one({'_id': login}, {'following': 1, 'followed': 1,
+        self.res = self.mongo.user.find_one({'_id': login}, {'following': 1, 'follower': 1,
             'tags_following': 1, 'activity_following': 1})
         self.res['email'] = str(login)
         del self.res['_id']
@@ -263,17 +261,19 @@ class PutFollowHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(403)
         if follow_type not in ('user', 'activity', 'tag'):
             raise tornado.web.HTTPError(400)
+        follow_key = {'user': 'following', 'activity': 'activity_following',
+                'tag': 'tags_following'}[follow_type]
 
         if self.req['follow']:
             self.mongo.user.update({'_id': login},
-                    {'$push': {follow_type: follow_id}})
-            self.mongo['follow_type'].update({'_id': follow_id},
-                    {'$push': {'followed': login}})
+                    {'$push': {follow_key: follow_id}})
+            self.mongo[follow_key].update({'_id': follow_id},
+                    {'$push': {'follower': login}})
         else:
             self.user.update({'_id': login},
-                    {'$pull': {follow_type: follow_id}})
-            self.mongo['follow_type'].update({'_id': follow_id},
-                    {'$pull': {'followed': login}})
+                    {'$pull': {follow_key: follow_id}})
+            self.mongo[follow_key].update({'_id': follow_id},
+                    {'$pull': {'follower': login}})
 
 class CommentHandler(api_base.BaseHandler):
     """respond to an activity."""
