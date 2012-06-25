@@ -83,7 +83,7 @@ class UserHandler(api_base.BaseHandler):
         try:
             sendmail(self.req['email'], msg)
         except smtplib.SMTPHeloError:
-            raise tornado.web.HTTPError(500)
+            raise tornado.web.HTTPError(503)
 
         self.mongo.user.update({"_id": self.req['email']},
                 {"$set": {"validation_link": link}})
