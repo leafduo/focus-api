@@ -18,6 +18,10 @@ class BaseHandler(tornado.web.RequestHandler):
     def fs(self):
         return self.application.fs
 
+    @property
+    def user_role(self):
+        return self.get_user_role();
+
     def get_current_user(self):
         """Set current user, authenticated via HTTP basic auth"""
 
