@@ -54,7 +54,7 @@ class UserHandler(api_base.BaseHandler):
 class ProfileHandler(api_base.BaseHandler):
     """Get/Delete/Update user profile
     """
-    api_path = '/profile/(.*)'
+    api_path = '/profile/([^/]*)'
 
     profile_key_modifiable = ('first_name', 'last_name', 'password')
     profile_key_checkable = ('first_name', 'last_name', 'role')
