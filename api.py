@@ -280,14 +280,17 @@ class PutFollowHandler(api_base.BaseHandler):
                 'tag': 'tags_following'}[follow_type]
 
         if self.req['follow']:
+            if self.mongo.user.find_one({'_id': login,
+                follow_key: follow_id}):
+                raise tornado.web.HTTPError(409)
             self.mongo.user.update({'_id': login},
                     {'$push': {follow_key: follow_id}})
-            self.mongo[follow_key].update({'_id': follow_id},
+            self.mongo[follow_type].update({'_id': ObjectId(follow_id)},
                     {'$push': {'follower': login}})
         else:
             self.mongo.user.update({'_id': login},
                     {'$pull': {follow_key: follow_id}})
-            self.mongo[follow_key].update({'_id': follow_id},
+            self.mongo[follow_type].update({'_id': ObjectId(follow_id)},
                     {'$pull': {'follower': login}})
 
 class CommentHandler(api_base.BaseHandler):
