@@ -261,7 +261,7 @@ class PutFollowHandler(api_base.BaseHandler):
     def put(self, login, follow_type, follow_id):
         if self.current_user != login:
             raise tornado.web.HTTPError(403)
-        if follow_type not in ('user', 'activity', 'tag')
+        if follow_type not in ('user', 'activity', 'tag'):
             raise tornado.web.HTTPError(400)
 
         if self.req['follow']:
