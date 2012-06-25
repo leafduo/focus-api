@@ -20,7 +20,7 @@ class RootHandler(api_base.BaseHandler):
 
     @api_base.auth
     def get(self):
-        """Print a simple welcome message"""
+        """Example API for authorization."""
 
 class UserHandler(api_base.BaseHandler):
     """User handler, which can create user and modify user profiles.
