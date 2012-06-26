@@ -68,7 +68,7 @@ class UserHandler(api_base.BaseHandler):
 
     @api_base.auth
     @api_base.json
-    def post(self, id):
+    def post(self, login):
         """Create a new user."""
 
         if self.get_user_role() != 'admin':
@@ -88,11 +88,17 @@ class UserHandler(api_base.BaseHandler):
         try:
             self.mongo.user.insert({"_id": self.req['email'], "first_name":
                 self.req['first_name'], "last_name": self.req['last_name'],
-                "role": self.req['role']})
+                "role": self.req['role'],  'following': [], 'follower': [],
+                'tags_following': [], 'activity_following': []})
+
         except pymongo.errors.DuplicateKeyError:
             raise tornado.web.HTTPError(422)
-        self.mongo.user.insert({'_id': login}, {'following': [], 'follower':
-            [], 'tags_following': [], 'activity_following': []})
+
+        useractivity = {"title": self.req['first_name'] + " Register", "type": "people",
+                                   "description": "Hi,everyone. I'm " + self.req['first_name'] + ". Glad to join the OmarHub!",
+                                   "owner": self.req['email'], "created_at": int(time.time()),
+                                   "publish": True, "tags": ["User"]}
+        self.mongo.activity.insert(useractivity)
 
         # send activation email
         cookbook = string.ascii_letters + string.digits
