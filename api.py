@@ -255,7 +255,7 @@ class EditActivityHandler(api_base.BaseHandler):
         activity = self.mongo.activity.find_one({"_id": activity_id})
         if (activity is None or activity["owner"] != self.current_user):
             raise tornado.web.HTTPError(404)
-        self.mongo.user.remove({"_id": activity_id})
+        self.mongo.activity.remove({"_id": activity_id})
 
     @api_base.auth
     @api_base.json
@@ -269,7 +269,11 @@ class EditActivityHandler(api_base.BaseHandler):
 
         self.restrict_to(self.req, self.activity_key_modifiable)
         for key in self.req.keys():
-            pass
+            activity[key] = self.req[key]
+        if self.req.has_key('publish'):
+            if self.req['publish'] != True and self.req['publish'] != False:
+                raise tornado.web.HTTPError(400)
+        self.mongo.activity.update({"_id": activity_id}, {"$set": self.req})
 
 class GetFollowHandler(api_base.BaseHandler):
     """Get follow status."""
