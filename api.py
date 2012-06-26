@@ -268,6 +268,8 @@ class EditActivityHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(404)
 
         self.restrict_to(self.req, self.activity_key_modifiable)
+        for key in self.req.keys():
+            pass
 
 class GetFollowHandler(api_base.BaseHandler):
     """Get follow status."""
@@ -295,7 +297,7 @@ class PutFollowHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(400)
         follow_key = {'user': 'following', 'activity': 'activity_following',
                 'tag': 'tags_following'}[follow_type]
-        if follow_type is not 'user':
+        if follow_type != 'user':
             follow_id = ObjectId(follow_id)
 
         if self.req['follow']:
