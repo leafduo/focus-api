@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 import smtplib
 from random import choice
 import string
+from password import Password
 
 import api_base
 
@@ -323,10 +324,14 @@ class ActivationHandler(api_base.BaseHandler):
 
     api_path = '/user/validation/(\w+)'
 
-    @api_base.auth
-    def get(self, validation_link):
+    @api_base.json
+    def put(self, validation_link):
+        password = Password.encrypt(self.req['password'])
+        self.mongo.user.update({"validation_link": validation_link}, 
+                {"$set": {"password": password}}) 
         self.mongo.user.update({"validation_link": validation_link},
                 {"$unset": {"validation_link": 1}})
+
 
 def sendmail(toaddr, msg):
     """utility to send mail"""
