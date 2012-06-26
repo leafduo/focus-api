@@ -218,6 +218,8 @@ class ActivityHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(400)
 
         query = {}
+        if self.user_role == 'fellow':
+            query['$or'] = [{'publish': True}, {'owner': self.current_user}]
         if activity_type:
             query['type'] = activity_type
         if event_type:
