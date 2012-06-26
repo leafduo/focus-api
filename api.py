@@ -247,6 +247,31 @@ class ActivityHandler(api_base.BaseHandler):
             del(activity['follower_count'])
             self.res['activity'].append(activity)
 
+class EditActivityHandler(api_base.BaseHandler):
+    """edit and delete an activity"""
+
+    api_path = '/activity/([^/]*)'
+
+    @api_base.auth
+    def delete(self, activity_id):
+        """delete activity"""
+
+        activity_id = ObjectId(activity_id)
+        activity = self.mongo.activity.find_one({"_id": activity_id})
+        if (activity is None or activity["owner"] != self.current_user):
+            raise tornado.web.HTTPError(404)
+        self.mongo.user.remove({"_id": activity_id})
+
+    @api_base.auth
+    @api_base.json
+    def put(self, activity_id):
+        """Modify activity."""
+
+        activity_id = ObjectId(activity_id)
+        activity = self.mongo.activity.find_one({"_id": activity_id})
+        if (activity is None or activity["owner"] != self.current_user):
+            raise tornado.web.HTTPError(404)
+
 class GetFollowHandler(api_base.BaseHandler):
     """Get follow status."""
 
