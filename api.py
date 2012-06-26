@@ -47,7 +47,8 @@ class UserHandler(api_base.BaseHandler):
             'organization_formed_date', 'organization_website',
             'organization_type', 'organization_employee_num',
             'organization_budget', 'organization_phone_countrycode',
-            'organization_phone')
+            'organization_phone',  'follower',  'following',
+            'tags_following',  'activity_following')
     profile_key_enum = {'gender':('male', 'female', 'secrecy'),
             'role':('admin', 'fellow'), 'email_type':('home', 'business'),
             'organization_type':
@@ -266,16 +267,17 @@ class EditActivityHandler(api_base.BaseHandler):
     def get(self, activity_id):
         """Get activity information"""
 
-        activity = self.mongo.user.find_one({"_id" : activity_id})
-        if not publish and self.get_user_role() != 'admin' and \
-                not (self.get_user_role() == 'fellow' and \
-                activate[owner] == self.current_user):
-                    raise tornado.web.HTTPError(403)
-
+        activity = self.mongo.activity.find_one({"_id" : ObjectId(activity_id)})
         if (activity is None):
             raise tornado.web.HTTPError(404)
 
-        self.res = self.restrict_to(profile, self.activity_key_checkable)
+        if not bool(activity['publish']) and self.get_user_role() != 'admin' and \
+                not (self.get_user_role() == 'fellow' and \
+                activity['owner'] == self.current_user):
+                    raise tornado.web.HTTPError(403)
+
+
+        self.res = self.restrict_to(activity, self.activity_key_checkable)
 
     @api_base.auth
     def delete(self, activity_id):
