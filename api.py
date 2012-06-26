@@ -286,12 +286,14 @@ class PutFollowHandler(api_base.BaseHandler):
             self.mongo.user.update({'_id': login},
                     {'$push': {follow_key: follow_id}})
             self.mongo[follow_type].update({'_id': ObjectId(follow_id)},
-                    {'$push': {'follower': login}})
+                    {'$push': {'follower': login},
+                        '$inc': {'follower_count': 1}})
         else:
             self.mongo.user.update({'_id': login},
                     {'$pull': {follow_key: follow_id}})
             self.mongo[follow_type].update({'_id': ObjectId(follow_id)},
-                    {'$pull': {'follower': login}})
+                    {'$pull': {'follower': login},
+                        '$inc': {'follower_count': -1}})
 
 class CommentHandler(api_base.BaseHandler):
     """respond to an activity."""
