@@ -203,7 +203,6 @@ class ActivityHandler(api_base.BaseHandler):
         offset = int(offset)
         limit = int(limit)
         followed = bool(followed)
-        tags = 
         if activity_type not in (None, 'offer', 'need', 'event', 'people'):
             raise tornado.web.HTTPError(400)
         if sort_by not in (None, 'most_followed', 'most_recent'):
