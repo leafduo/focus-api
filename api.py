@@ -59,13 +59,6 @@ class UserHandler(api_base.BaseHandler):
               '$500,000-$1,000,000', '$1,000,000-$5,000,000',
               '$5,000,000-$10,000,000', 'more than $10,000,000')}
 
-    def restrict_to(self, d, it):
-        """delete all items in dictionary except items whose keys in it (iterable)"""
-        for k in d.keys():
-            if k not in it:
-                del d[k]
-        return d
-
     @api_base.auth
     @api_base.json
     def post(self, login):
@@ -251,6 +244,8 @@ class EditActivityHandler(api_base.BaseHandler):
     """edit and delete an activity"""
 
     api_path = '/activity/([^/]*)'
+    activity_key_modifiable = ('description', 'title', 'start_at', 'end_at',
+    'publish')
 
     @api_base.auth
     def delete(self, activity_id):
@@ -271,6 +266,8 @@ class EditActivityHandler(api_base.BaseHandler):
         activity = self.mongo.activity.find_one({"_id": activity_id})
         if (activity is None or activity["owner"] != self.current_user):
             raise tornado.web.HTTPError(404)
+
+        self.restrict_to(self.req, self.activity_key_modifiable)
 
 class GetFollowHandler(api_base.BaseHandler):
     """Get follow status."""

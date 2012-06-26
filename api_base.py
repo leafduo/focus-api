@@ -72,6 +72,14 @@ class BaseHandler(tornado.web.RequestHandler):
         #call super class
         tornado.web.RequestHandler.finish(self, chunk)
 
+    def restrict_to(self, d, it):
+        """delete all items in dictionary except items whose keys in it (iterable)"""
+        for k in d.keys():
+            if k not in it:
+                del d[k]
+        return d
+
+
 def auth(method):
     """Decoreator for APIs which need authorization"""
     @functools.wraps(method)
