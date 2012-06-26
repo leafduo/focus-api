@@ -261,7 +261,7 @@ class EditActivityHandler(api_base.BaseHandler):
     activity_key_modifiable = ('description', 'title', 'start_at', 'end_at',
     'publish')
     activity_key_checkable = ('description', 'title', 'type', 'start_at',
-    'end_at', 'publish', 'owner', 'follower_count',  'follower',  'tags')
+    'end_at', 'publish', 'owner', 'follower',  'tags')
 
     @api_base.auth
     def get(self, activity_id):
@@ -285,8 +285,14 @@ class EditActivityHandler(api_base.BaseHandler):
 
         activity_id = ObjectId(activity_id)
         activity = self.mongo.activity.find_one({"_id": activity_id})
-        if (activity is None or activity["owner"] != self.current_user):
+        if (activity is None):
             raise tornado.web.HTTPError(404)
+
+        if self.get_user_role() != 'admin' and \
+                not (self.get_user_role() == 'fellow' and \
+                activity['owner'] == self.current_user):
+                    raise tornado.web.HTTPError(403)
+
         self.mongo.activity.remove({"_id": activity_id})
 
     @api_base.auth
@@ -296,8 +302,13 @@ class EditActivityHandler(api_base.BaseHandler):
 
         activity_id = ObjectId(activity_id)
         activity = self.mongo.activity.find_one({"_id": activity_id})
-        if (activity is None or activity["owner"] != self.current_user):
+        if (activity is None):
             raise tornado.web.HTTPError(404)
+
+        if self.get_user_role() != 'admin' and \
+                not (self.get_user_role() == 'fellow' and \
+                activity['owner'] == self.current_user):
+                    raise tornado.web.HTTPError(403)
 
         self.restrict_to(self.req, self.activity_key_modifiable)
         for key in self.req.keys():
