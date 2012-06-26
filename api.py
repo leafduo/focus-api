@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.6
+#!/usr/bin/env python2.6
 # vim: set fileencoding=utf-8
 
 import datetime
@@ -256,6 +257,23 @@ class EditActivityHandler(api_base.BaseHandler):
     api_path = '/activity/([^/]*)'
     activity_key_modifiable = ('description', 'title', 'start_at', 'end_at',
     'publish')
+    activity_key_checkable = ('description', 'title', 'type', 'start_at',
+    'end_at', 'publish', 'owner', 'follower_count',  'follower',  'tags')
+
+    @api_base.auth
+    def get(self, activity_id):
+        """Get activity information"""
+
+        activity = self.mongo.user.find_one({"_id" : activity_id})
+        if not publish and self.get_user_role() != 'admin' and \
+                not (self.get_user_role() == 'fellow' and \
+                activate[owner] == self.current_user):
+                    raise tornado.web.HTTPError(403)
+
+        if (activity is None):
+            raise tornado.web.HTTPError(404)
+
+        self.res = self.restrict_to(profile, self.activity_key_checkable)
 
     @api_base.auth
     def delete(self, activity_id):
