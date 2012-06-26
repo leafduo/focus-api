@@ -199,12 +199,12 @@ class ActivityHandler(api_base.BaseHandler):
         activity_type = self.get_argument('type', None)
         sort_by = self.get_argument('sort_by', None)
         event_type = self.get_argument('event_type', None)
-        followed = self.get_argument('followed', False)
+        all_user = self.get_argument('all_user', True)
         year_joined = self.get_argument('year_joined', None)
 
         offset = int(offset)
         limit = int(limit)
-        followed = bool(followed)
+        all_user = bool(all_user)
         if year_joined is not None:
             year_joined = int(year_joined)
         if activity_type not in (None, 'offer', 'need', 'event', 'people'):
@@ -232,7 +232,7 @@ class ActivityHandler(api_base.BaseHandler):
                 query['end_at'] = {'$gte': now}
             elif event_type == 'past':
                 query['end_at'] = {'$lt': now}
-        if followed:
+        if not all_user:
             query['follower'] = {'$in': [self.current_user]}
         if year_joined:
             year_start = time.mktime((year_joined, 1, 1, 0, 0, 0, 0, 0, 0))
