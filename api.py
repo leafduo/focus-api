@@ -116,6 +116,18 @@ class UserHandler(api_base.BaseHandler):
         if (profile is None):
             raise tornado.web.HTTPError(404)
 
+        activities = []
+        tags = []
+
+        for activity_id in profile['activity_following']:
+            activities.append(str(activity_id))
+
+        for tag_id in profile['tags_following']:
+            tags.append(str(tag_id))
+
+        profile['activity_following']=activities
+        profile['tags_following']=tags
+
         self.res = self.restrict_to(profile, self.profile_key_checkable)
 
     @api_base.auth
@@ -233,7 +245,7 @@ class ActivityHandler(api_base.BaseHandler):
             elif event_type == 'past':
                 query['end_at'] = {'$lt': now}
         if not all_user:
-            query['follower'] = {'$in': [self.current_user]}
+            query['follower'] = self.current_user
         if year_joined:
             year_start = time.mktime((year_joined, 1, 1, 0, 0, 0, 0, 0, 0))
             year_end = time.mktime((year_joined, 12, 31, 0, 0, 0, 0, 0, 0))
@@ -328,6 +340,19 @@ class GetFollowHandler(api_base.BaseHandler):
         self.res = self.mongo.user.find_one({'_id': login}, {'following': 1, 'follower': 1,
             'tags_following': 1, 'activity_following': 1})
         self.res['email'] = str(login)
+
+        activities = []
+        tags = []
+
+        for activity_id in self.res['activity_following']:
+            activities.append(str(activity_id))
+
+        for tag_id in self.res['tags_following']:
+            tags.append(str(tag_id))
+
+        self.res['activity_following']=activities
+        self.res['tags_following']=tags
+
         del self.res['_id']
 
 class PutFollowHandler(api_base.BaseHandler):
