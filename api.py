@@ -197,60 +197,49 @@ class ActivityHandler(api_base.BaseHandler):
         limit = self.get_argument('limit', 20)
         activity_type = self.get_argument('type', None)
         sort_by = self.get_argument('sort_by', None)
-        event_type = self.get_argument('event_type', None) #not used now
+        event_type = self.get_argument('event_type', None)
+        followed = self.get_argument('followed', False)
 
         offset = int(offset)
         limit = int(limit)
-        if activity_type not in (None, 'offer', 'need', 'event'):
+        followed = bool(followed)
+        tags = 
+        if activity_type not in (None, 'offer', 'need', 'event', 'people'):
             raise tornado.web.HTTPError(400)
         if sort_by not in (None, 'most_followed', 'most_recent'):
+            raise tornado.web.HTTPError(400)
+        if activity_type != 'event' and event_type is not None:
             raise tornado.web.HTTPError(400)
         if event_type not in (None, 'upcoming', 'past', 'ongoing'):
             raise tornado.web.HTTPError(400)
 
-        activities = self.mongo.activity
-        fieldh = ''
-        sort = [('created_at', pymongo.DESCENDING)]
-        if sort_by == 'most_followed':
-            from bson.code import Code
-            mapper = Code("""
-                function () {
-                    activity = {}
-                    for (var key in this) {
-                        activity[key] = this[key]
-                    }
-                    if ('followed' in this) {
-                        activity['followed_count'] = this.followed.length
-                    } else {
-                        activity['followed_count'] = 0
-                    }
-                    emit(this._id, activity)
-                }""")
-            reducer = Code("""
-                function (key, vals) {
-                    return vals;
-                }
-                """)
-            activities = activities.map_reduce(mapper, reducer, 'tmp')
-            fieldh = 'value.'
-            sort = [('value.followed_count', pymongo.DESCENDING)]
-
         query = {}
         if activity_type:
-            query[fieldh + 'type'] = activity_type
-
-        activity_array = activities.find(query).sort(sort).skip(offset).limit(limit)
+            query['type'] = activity_type
+        if event_type:
+            now = int(time.time())
+            if event_type == 'upcoming':
+                query['start_at'] = {'$gt': now}
+            elif event_type == 'ongoing':
+                query['start_at'] = {'$lte': now}
+                query['end_at'] = {'$gte': now}
+            elif event_type == 'past':
+                query['end_at'] = {'$lt': now}
+        if followed:
+            query['follower'] = {'$in': [self.current_user]}
 
         if sort_by == 'most_followed':
-            def to_activity(wrapped):
-                del wrapped['value']['followed_count']
-                return wrapped['value']
-            activity_array = map(to_activity, activity_array)
+            sort = [('follower_count', pymongo.DESCENDING), ('created_at', pymongo.DESCENDING)]
+        else:
+            sort = [('created_at', pymongo.DESCENDING)]
+
+        activity_array = self.mongo.activity.find(query).sort(sort).skip(offset).limit(limit)
 
         self.res = {'activity': []}
         for activity in activity_array:
             activity['id'] = str(activity['_id'])
             del(activity['_id'])
+            del(activity['follower_count'])
             self.res['activity'].append(activity)
 
 class GetFollowHandler(api_base.BaseHandler):
