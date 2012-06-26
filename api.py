@@ -288,13 +288,13 @@ class PutFollowHandler(api_base.BaseHandler):
                 raise tornado.web.HTTPError(409)
             self.mongo.user.update({'_id': login},
                     {'$push': {follow_key: follow_id}})
-            self.mongo[follow_type].update({'_id': ObjectId(follow_id)},
+            self.mongo[follow_type].update({'_id': follow_id},
                     {'$push': {'follower': login},
                         '$inc': {'follower_count': 1}})
         else:
             self.mongo.user.update({'_id': login},
                     {'$pull': {follow_key: follow_id}})
-            self.mongo[follow_type].update({'_id': ObjectId(follow_id)},
+            self.mongo[follow_type].update({'_id': follow_id},
                     {'$pull': {'follower': login},
                         '$inc': {'follower_count': -1}})
 
@@ -329,8 +329,8 @@ class ActivationHandler(api_base.BaseHandler):
     @api_base.json
     def put(self, validation_link):
         password = Password.encrypt(self.req['password'])
-        self.mongo.user.update({"validation_link": validation_link}, 
-                {"$set": {"password": password}}) 
+        self.mongo.user.update({"validation_link": validation_link},
+                {"$set": {"password": password}})
         self.mongo.user.update({"validation_link": validation_link},
                 {"$unset": {"validation_link": 1}})
 
