@@ -198,10 +198,13 @@ class ActivityHandler(api_base.BaseHandler):
         sort_by = self.get_argument('sort_by', None)
         event_type = self.get_argument('event_type', None)
         followed = self.get_argument('followed', False)
+        year_joined = self.get_argument('year_joined', None)
 
         offset = int(offset)
         limit = int(limit)
         followed = bool(followed)
+        if year_joined is not None:
+            year_joined = int(year_joined)
         if activity_type not in (None, 'offer', 'need', 'event', 'people'):
             raise tornado.web.HTTPError(400)
         if sort_by not in (None, 'most_followed', 'most_recent'):
@@ -209,6 +212,8 @@ class ActivityHandler(api_base.BaseHandler):
         if activity_type != 'event' and event_type is not None:
             raise tornado.web.HTTPError(400)
         if event_type not in (None, 'upcoming', 'past', 'ongoing'):
+            raise tornado.web.HTTPError(400)
+        if activity_type != 'people' and year_joined is not None:
             raise tornado.web.HTTPError(400)
 
         query = {}
@@ -225,6 +230,10 @@ class ActivityHandler(api_base.BaseHandler):
                 query['end_at'] = {'$lt': now}
         if followed:
             query['follower'] = {'$in': [self.current_user]}
+        if year_joined:
+            year_start = time.mktime((year_joined, 1, 1, 0, 0, 0, 0, 0, 0))
+            year_end = time.mktime((year_joined, 12, 31, 0, 0, 0, 0, 0, 0))
+            query['created_at'] = {'$gte': year_start, '$lte': year_end}
 
         if sort_by == 'most_followed':
             sort = [('follower_count', pymongo.DESCENDING), ('created_at', pymongo.DESCENDING)]
@@ -237,7 +246,8 @@ class ActivityHandler(api_base.BaseHandler):
         for activity in activity_array:
             activity['id'] = str(activity['_id'])
             del(activity['_id'])
-            del(activity['follower_count'])
+            if activity.has_key('follower_count'):
+                del(activity['follower_count'])
             self.res['activity'].append(activity)
 
 class EditActivityHandler(api_base.BaseHandler):
