@@ -4,7 +4,7 @@
 import functools
 import tornado.web
 import base64
-
+from bson.objectid import ObjectId
 from password import Password
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -65,9 +65,17 @@ class BaseHandler(tornado.web.RequestHandler):
             arg = self.get_argument(name, strip=strip)
         return self.str2bool(arg)
 
+    def _make_serializable(self, d):
+        for key in d:
+            if isinstance(d[key], ObjectId):
+                d[key] = str(d[key])
+            elif isinstance(d[key], dict):
+                self._make_serializable(d[key])
+
     def finish(self, chunk=None):
         """Overwrite finish() for encoding API result to JSON"""
         if hasattr(self, 'res'):
+            self._make_serializable(self.res)
             self.write(self.res)
         #call super class
         tornado.web.RequestHandler.finish(self, chunk)
