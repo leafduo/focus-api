@@ -194,6 +194,11 @@ class ActivityHandler(api_base.BaseHandler):
         if not isinstance(self.req['tags'], list):
             raise tornado.web.HTTPError(400)
 
+        for tag in self.req['tags']:
+            if not self.mongo.tag.find_one({"_id": tag}):
+                self.mongo.tag.insert({"_id": tag, 'follower': [],
+                'follower_count': 0})
+
         activity_id = self.mongo.activity.insert(self.req)
         self.set_status(201)
         self.set_header('Location', '/activity/' + str(activity_id))
@@ -282,7 +287,6 @@ class EditActivityHandler(api_base.BaseHandler):
                 activity['owner'] == self.current_user):
                     raise tornado.web.HTTPError(403)
 
-
         self.res = self.restrict_to(activity, self.activity_key_checkable)
 
     @api_base.auth
@@ -334,7 +338,6 @@ class GetFollowHandler(api_base.BaseHandler):
         self.res = self.mongo.user.find_one({'_id': login}, {'following': 1, 'follower': 1,
             'tags_following': 1, 'activity_following': 1})
         self.res['email'] = str(login)
-
 
         profile['activity_following'] = [str(activity_id) for activity_id in profile['activity_following']]
         profile['tags_following'] = [str(tag_id) for tag_id in profile['tags_following']]
