@@ -344,6 +344,26 @@ class PutFollowHandler(api_base.BaseHandler):
 
     api_path = '/user/([^/]*)/follow/([^/]*)/([^/]*)'
 
+    def follow_to(self, login, follow_key, follow_type, follow_id, isfollow):
+        if isfollow:
+            if self.mongo.user.find_one({'_id': login,
+                follow_key: follow_id}):
+                raise tornado.web.HTTPError(409)
+            self.mongo.user.update({'_id': login},
+                    {'$push': {follow_key: follow_id}})
+            self.mongo[follow_type].update({'_id': follow_id},
+                    {'$push': {'follower': login},
+                        '$inc': {'follower_count': 1}})
+        else:
+            if not self.mongo.user.find_one({'_id': login,
+                follow_key: follow_id}):
+                raise tornado.web.HTTPError(409)
+            self.mongo.user.update({'_id': login},
+                    {'$pull': {follow_key: follow_id}})
+            self.mongo[follow_type].update({'_id': follow_id},
+                    {'$pull': {'follower': login},
+                        '$inc': {'follower_count': -1}})
+
     @api_base.auth
     @api_base.json
     def put(self, login, follow_type, follow_id):
@@ -356,21 +376,12 @@ class PutFollowHandler(api_base.BaseHandler):
         if follow_type != 'user':
             follow_id = ObjectId(follow_id)
 
-        if self.req['follow']:
-            if self.mongo.user.find_one({'_id': login,
-                follow_key: follow_id}):
-                raise tornado.web.HTTPError(409)
-            self.mongo.user.update({'_id': login},
-                    {'$push': {follow_key: follow_id}})
-            self.mongo[follow_type].update({'_id': follow_id},
-                    {'$push': {'follower': login},
-                        '$inc': {'follower_count': 1}})
-        else:
-            self.mongo.user.update({'_id': login},
-                    {'$pull': {follow_key: follow_id}})
-            self.mongo[follow_type].update({'_id': follow_id},
-                    {'$pull': {'follower': login},
-                        '$inc': {'follower_count': -1}})
+        if follow_type == 'activity':
+            activity = self.mongo.activity.find_one({'_id':follow_id})
+            if activity['type'] == 'people':
+                self.follow_to(login, 'following', 'user', activity['owner'], self.req['follow'])
+
+        self.follow_to(login, follow_key, follow_type, follow_id, self.req['follow'])
 
 class CommentHandler(api_base.BaseHandler):
     """respond to an activity."""
