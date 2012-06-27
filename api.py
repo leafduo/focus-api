@@ -116,17 +116,8 @@ class UserHandler(api_base.BaseHandler):
         if (profile is None):
             raise tornado.web.HTTPError(404)
 
-        activities = []
-        tags = []
-
-        for activity_id in profile['activity_following']:
-            activities.append(str(activity_id))
-
-        for tag_id in profile['tags_following']:
-            tags.append(str(tag_id))
-
-        profile['activity_following']=activities
-        profile['tags_following']=tags
+        profile['activity_following'] = [str(activity_id) for activity_id in profile['activity_following']]
+        profile['tags_following'] = [str(tag_id) for tag_id in profile['tags_following']]
 
         self.res = self.restrict_to(profile, self.profile_key_checkable)
 
@@ -187,8 +178,9 @@ class ActivityHandler(api_base.BaseHandler):
 
             self.req['publish'] = bool(self.req['publish'])
 
-            for key in ('start_at', 'end_at'):
-                self.req[key] = int(self.req[key])
+            if self.req.has_key(('start_at', 'end_at')):
+                for key in ('start_at', 'end_at'):
+                    self.req[key] = int(self.req[key])
         except KeyError:
             raise tornado.web.HTTPError(400)
 
@@ -341,17 +333,9 @@ class GetFollowHandler(api_base.BaseHandler):
             'tags_following': 1, 'activity_following': 1})
         self.res['email'] = str(login)
 
-        activities = []
-        tags = []
 
-        for activity_id in self.res['activity_following']:
-            activities.append(str(activity_id))
-
-        for tag_id in self.res['tags_following']:
-            tags.append(str(tag_id))
-
-        self.res['activity_following']=activities
-        self.res['tags_following']=tags
+        profile['activity_following'] = [str(activity_id) for activity_id in profile['activity_following']]
+        profile['tags_following'] = [str(tag_id) for tag_id in profile['tags_following']]
 
         del self.res['_id']
 
