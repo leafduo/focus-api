@@ -430,3 +430,38 @@ def sendmail(toaddr, msg):
     s.login("324823396@qq.com","5gmailqq")
     s.sendmail(fromaddr,toaddr,msg)
     s.quit()
+
+class TagsHandler(api_base.BaseHandler):
+    """Get and delete a tag
+    """
+
+    api_path = '/tags/([^/]*)'
+    tag_key_checkable = ('_id', 'follower')
+
+    @api_base.auth
+    def get(self, tag_id):
+        """Get all tag"""
+
+        offset = self.get_argument('offset', 0)
+        limit = self.get_argument('limit', 20)
+        tag_array = self.mongo.tag.find(). \
+        sort([('_id', pymongo.ASCENDING)]).skip(offset).limit(limit)
+        self.res = {'tags': []}
+
+        self.res = self.restrict_to(tag_array, tag_key_checkable)
+        for tag in self.res['tags']:
+            tag['id']=tag['_id']
+            del(tag['_id'])
+
+    @api_base.auth
+    def delete(self, tag_id):
+        """Delete tag"""
+
+        tag = self.mongo.tag.find_one({"_id": tag_id})
+        if (tag is None):
+            raise tornado.web.HTTPError(404)
+
+        if self.get_user_role() != 'admin':
+            raise tornado.web.HTTPError(403)
+
+        self.mongo.tag.remove({"_id": tag_id})
