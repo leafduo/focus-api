@@ -87,7 +87,7 @@ class UserHandler(api_base.BaseHandler):
                 'tags_following': [], 'activity_following': []})
 
         except pymongo.errors.DuplicateKeyError:
-            raise tornado.web.HTTPError(422)
+            raise tornado.web.HTTPError(409)
 
         useractivity = {"title": self.req['first_name'] + " Register", "type": "people",
                                    "description": "Hi,everyone. I'm " + self.req['first_name'] + ". Glad to join the OmarHub!",
@@ -171,7 +171,7 @@ class UserHandler(api_base.BaseHandler):
         try:
             self.mongo.user.update({'_id': email}, {'$set': self.req})
         except pymongo.errors.DuplicateKeyError:
-            raise tornado.web.HTTPError(422)
+            raise tornado.web.HTTPError(409)
 
 class ActivityHandler(api_base.BaseHandler):
     """Post and view activities."""
