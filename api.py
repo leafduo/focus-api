@@ -375,6 +375,8 @@ class PutFollowHandler(api_base.BaseHandler):
                 'tag': 'tags_following'}[follow_type]
         if follow_type != 'user':
             follow_id = ObjectId(follow_id)
+        if not self.mongo[follow_type].find_one({'_id': follow_id}):
+            raise tornado.web.HTTPError(404)
 
         if follow_type == 'activity':
             activity = self.mongo.activity.find_one({'_id':follow_id})
