@@ -38,8 +38,8 @@ class UserHandler(api_base.BaseHandler):
             'organization_website', 'organization_type',
             'organization_employee_num', 'organization_budget',
             'organization_phone_countrycode', 'organization_phone')
-    profile_key_checkable = ('first_name', 'last_name', 'status', 'role',
-            'gender', 'language', 'work_field', 'location',
+    profile_key_checkable = ('_id', 'first_name', 'last_name', 'status',
+            'role', 'gender', 'language', 'work_field', 'location',
             'population_target', 'mobile_countrycode', 'mobile',
             'email_type', 'street', 'city', 'province', 'zip',
             'country', 'skype_ID', 'organization_address',
@@ -120,6 +120,8 @@ class UserHandler(api_base.BaseHandler):
         profile['tags_following'] = [str(tag_id) for tag_id in profile['tags_following']]
 
         self.res = self.restrict_to(profile, self.profile_key_checkable)
+        self.res['email'] = self.res['_id']
+        del(self.res['_id'])
 
     @api_base.auth
     def delete(self, email):
