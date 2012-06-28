@@ -254,7 +254,7 @@ class ActivityHandler(api_base.BaseHandler):
             year_end = time.mktime((year_joined, 12, 31, 0, 0, 0, 0, 0, 0))
             query['created_at'] = {'$gte': year_start, '$lte': year_end}
         if tags:
-            query['tags'] = {'$all': tags}
+            query['tags'] = {'$in': tags}
 
         if sort_by == 'most_followed':
             sort = [('follower_count', pymongo.DESCENDING), ('created_at', pymongo.DESCENDING)]
