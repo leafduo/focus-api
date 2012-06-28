@@ -278,7 +278,8 @@ class EditActivityHandler(api_base.BaseHandler):
     activity_key_modifiable = ('description', 'title', 'start_at', 'end_at',
     'publish')
     activity_key_checkable = ('description', 'title', 'type', 'start_at',
-    'end_at', 'created_at', 'publish', 'owner', 'follower',  'tags')
+    'end_at', 'created_at', 'publish', 'owner', 'follower',  'tags',
+    'comment')
 
     @api_base.auth
     def get(self, activity_id):
@@ -457,8 +458,16 @@ class TagsHandler(api_base.BaseHandler):
 
         offset = self.get_argument('offset', 0)
         limit = self.get_argument('limit', 20)
-        tag_array = self.mongo.tag.find(). \
-        sort([('_id', pymongo.ASCENDING)]).skip(offset).limit(limit)
+        all_tag = self.get_argument('all_tag',  True)
+        all_tag = bool(all_user)
+
+        if all_tag:
+            tag_array = self.mongo.tag.find(). \
+            sort([('_id', pymongo.ASCENDING)]).skip(offset).limit(limit)
+        else:
+            tag_array = self.mongo.tag.find({'follower': self.current_user}). \
+            sort([('_id', pymongo.ASCENDING)]).skip(offset).limit(limit)
+
         self.res = {'tags': []}
 
         self.res['tags'] = [self.restrict_to(tag,  self.tag_key_checkable) for tag in tag_array]
