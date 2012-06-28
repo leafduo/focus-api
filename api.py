@@ -427,7 +427,10 @@ class ActivationHandler(api_base.BaseHandler):
 
     @api_base.json
     def put(self, validation_link):
+        login = self.req['email']
         password = Password.encrypt(self.req['password'])
+        if not self.mongo.user.find_one({"id": login, "validation_link": validation_link}):
+            raise tornado.web.HTTPError(404)
         self.mongo.user.update({"validation_link": validation_link},
                 {"$set": {"password": password}})
         self.mongo.user.update({"validation_link": validation_link},
