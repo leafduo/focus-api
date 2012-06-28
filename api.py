@@ -212,12 +212,16 @@ class ActivityHandler(api_base.BaseHandler):
         event_type = self.get_argument('event_type', None)
         all_user = self.get_argument('all_user', True)
         year_joined = self.get_argument('year_joined', None)
+        tags = self.get_argument('tags', None)
 
         offset = int(offset)
         limit = int(limit)
         all_user = bool(all_user)
         if year_joined is not None:
             year_joined = int(year_joined)
+        if tags:
+            tags = tags.split(' ')
+
         if activity_type not in (None, 'offer', 'need', 'event', 'people'):
             raise tornado.web.HTTPError(400)
         if sort_by not in (None, 'most_followed', 'most_recent'):
@@ -249,6 +253,8 @@ class ActivityHandler(api_base.BaseHandler):
             year_start = time.mktime((year_joined, 1, 1, 0, 0, 0, 0, 0, 0))
             year_end = time.mktime((year_joined, 12, 31, 0, 0, 0, 0, 0, 0))
             query['created_at'] = {'$gte': year_start, '$lte': year_end}
+        if tags:
+            query['tags'] = {'$all': tags}
 
         if sort_by == 'most_followed':
             sort = [('follower_count', pymongo.DESCENDING), ('created_at', pymongo.DESCENDING)]
