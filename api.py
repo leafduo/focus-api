@@ -278,7 +278,7 @@ class EditActivityHandler(api_base.BaseHandler):
     activity_key_modifiable = ('description', 'title', 'start_at', 'end_at',
     'publish')
     activity_key_checkable = ('description', 'title', 'type', 'start_at',
-    'end_at', 'publish', 'owner', 'follower',  'tags')
+    'end_at', 'created_at', 'publish', 'owner', 'follower',  'tags')
 
     @api_base.auth
     def get(self, activity_id):
