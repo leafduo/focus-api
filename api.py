@@ -461,7 +461,7 @@ class TagsHandler(api_base.BaseHandler):
         sort([('_id', pymongo.ASCENDING)]).skip(offset).limit(limit)
         self.res = {'tags': []}
 
-        self.res = self.restrict_to(tag_array, tag_key_checkable)
+        self.res['tags'] = [self.restrict_to(tag,  self.tag_key_checkable) for tag in tag_array]
         for tag in self.res['tags']:
             tag['id']=tag['_id']
             del(tag['_id'])
