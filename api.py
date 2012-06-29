@@ -12,6 +12,10 @@ from random import choice
 import string
 from password import Password
 
+from email.Header import Header
+from email.MIMEMultipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 import api_base
 
 class RootHandler(api_base.BaseHandler):
@@ -98,9 +102,11 @@ class UserHandler(api_base.BaseHandler):
         # send activation email
         cookbook = string.ascii_letters + string.digits
         link = ''.join([choice(cookbook) for i in range(0,64)])
-        msg = 'This is from focus team, here is your activation link: \r\n' + link
+        msg = 'This is from focus team, here is your activation link: \r\n http://localhost:49258/OmarHub/login.aspx?hash=' + link
+        subject = 'Welcome to OmarHub!'
+
         try:
-            sendmail(self.req['email'], msg)
+            sendmail(self.req['email'], subject, msg)
         except smtplib.SMTPHeloError:
             raise tornado.web.HTTPError(503)
 
@@ -135,7 +141,8 @@ class UserHandler(api_base.BaseHandler):
         if (profile is None):
             raise tornado.web.HTTPError(404)
 
-        self.mongo.user.remove({"_id" : email})
+        self.mongo.user.remove({"_id": email})
+        self.mongo.activity.remove({"type": "people", "owner": email})
 
     @api_base.auth
     @api_base.json
@@ -436,18 +443,6 @@ class ActivationHandler(api_base.BaseHandler):
         self.mongo.user.update({"validation_link": validation_link},
                 {"$unset": {"validation_link": 1}})
 
-
-def sendmail(toaddr, msg):
-    """utility to send mail"""
-
-    server = 'smtp.qq.com'
-    fromaddr = '324823396@qq.com'
-    s = smtplib.SMTP(server)
-    s.set_debuglevel(1)
-    s.login("324823396@qq.com","5gmailqq")
-    s.sendmail(fromaddr,toaddr,msg)
-    s.quit()
-
 class TagsHandler(api_base.BaseHandler):
     """Get and delete a tag
     """
@@ -490,3 +485,20 @@ class TagsHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(403)
 
         self.mongo.tag.remove({"_id": tag_id})
+
+def sendmail(toaddr, subject, text):
+    """utility to send mail"""
+
+    msg = MIMEMultipart()
+    server = 'smtp.qq.com'
+    fromaddr = '324823396@qq.com'
+    s = smtplib.SMTP(server)
+    s.set_debuglevel(1)
+    s.login("324823396@qq.com","5gmailqq")
+    msg['to'] =toaddr
+    msg['from'] = 'admin@OmarHub.com'
+    msg['subject'] = Header(subject, 'gb2312')
+    msg.attach(MIMEText(text))
+    print '!!!', msg
+    s.sendmail(fromaddr,toaddr,msg.as_string())
+    s.quit()
