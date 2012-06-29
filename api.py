@@ -494,7 +494,7 @@ class TagsHandler(api_base.BaseHandler):
 
         offset = self.get_argument('offset', 0)
         limit = self.get_argument('limit', 20)
-        all_tag = self.get_argument('all_tag',  True)
+        all_tag = self.get_argument('all_tag',  'True')
         all_tag = all_tag == 'True'
 
         if all_tag:
