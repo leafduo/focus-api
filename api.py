@@ -238,7 +238,7 @@ class ActivityHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(400)
         if activity_type != 'people' and year_joined is not None:
             raise tornado.web.HTTPError(400)
-        if all_user not in ('all', 'following', 'create'):
+        if all_user not in ('all', 'following'):
             raise tornado.web.HTTPError(400)
 
         query = {}
@@ -257,8 +257,6 @@ class ActivityHandler(api_base.BaseHandler):
                 query['end_at'] = {'$lt': now}
         if all_user == 'following':
             query['follower'] = self.current_user
-        elif all_user == 'create':
-            query['owner'] = self.current_user
         if year_joined:
             year_start = time.mktime((year_joined, 1, 1, 0, 0, 0, 0, 0, 0))
             year_end = time.mktime((year_joined, 12, 31, 0, 0, 0, 0, 0, 0))
@@ -272,6 +270,37 @@ class ActivityHandler(api_base.BaseHandler):
             sort = [('created_at', pymongo.DESCENDING)]
 
         activity_array = self.mongo.activity.find(query).sort(sort).skip(offset).limit(limit)
+
+        self.res = {'activity': []}
+        for activity in activity_array:
+            activity['id'] = str(activity['_id'])
+            del(activity['_id'])
+            if activity.has_key('follower_count'):
+                del(activity['follower_count'])
+            self.res['activity'].append(activity)
+
+class GetUserActivityHandler(api_base.BaseHandler):
+    """get some user's activities"""
+
+    api_path = '/user/([^/]*)/activity'
+
+    @api_base.auth
+    def get(self, email):
+        """get activities created by user (email)"""
+        offset = self.get_argument('offset', 0)
+        limit = self.get_argument('limit', 20)
+
+        offset = int(offset)
+        limit = int(limit)
+
+        if not self.mongo.user.find_one({"_id": email}):
+            raise tornado.web.HTTPError(404)
+
+        query = {'owner': email}
+        if self.user_role == 'fellow' and self.current_user != email:
+            query['publish'] = True
+        activity_array = self.mongo.activity.find(query).\
+        sort('created_at', pymongo.DESCENDING).skip(offset).limit(limit)
 
         self.res = {'activity': []}
         for activity in activity_array:
