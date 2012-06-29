@@ -217,13 +217,12 @@ class ActivityHandler(api_base.BaseHandler):
         activity_type = self.get_argument('type', None)
         sort_by = self.get_argument('sort_by', None)
         event_type = self.get_argument('event_type', None)
-        all_user = self.get_argument('all_user', True)
+        all_user = self.get_argument('all_user', 'all')
         year_joined = self.get_argument('year_joined', None)
         tags = self.get_argument('tags', None)
 
         offset = int(offset)
         limit = int(limit)
-        all_user = bool(all_user)
         if year_joined is not None:
             year_joined = int(year_joined)
         if tags:
@@ -238,6 +237,8 @@ class ActivityHandler(api_base.BaseHandler):
         if event_type not in (None, 'upcoming', 'past', 'ongoing'):
             raise tornado.web.HTTPError(400)
         if activity_type != 'people' and year_joined is not None:
+            raise tornado.web.HTTPError(400)
+        if all_user not in ('all', 'following', 'create'):
             raise tornado.web.HTTPError(400)
 
         query = {}
@@ -254,8 +255,10 @@ class ActivityHandler(api_base.BaseHandler):
                 query['end_at'] = {'$gte': now}
             elif event_type == 'past':
                 query['end_at'] = {'$lt': now}
-        if not all_user:
+        if all_user == 'following':
             query['follower'] = self.current_user
+        elif all_user == 'create':
+            query['owner'] = self.current_user
         if year_joined:
             year_start = time.mktime((year_joined, 1, 1, 0, 0, 0, 0, 0, 0))
             year_end = time.mktime((year_joined, 12, 31, 0, 0, 0, 0, 0, 0))
