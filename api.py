@@ -395,7 +395,10 @@ class PutFollowHandler(api_base.BaseHandler):
 
     api_path = '/user/([^/]*)/follow/([^/]*)/([^/]*)'
 
-    def follow_to(self, login, follow_key, follow_type, follow_id, isfollow):
+    def follow_to(self, login, follow_type, follow_id, isfollow):
+        follow_key = {'user': 'following', 'activity': 'activity_following',
+                'tag': 'tags_following'}[follow_type]
+
         if isfollow:
             if self.mongo.user.find_one({'_id': login,
                 follow_key: follow_id}):
@@ -422,8 +425,7 @@ class PutFollowHandler(api_base.BaseHandler):
             raise tornado.web.HTTPError(403)
         if follow_type not in ('user', 'activity', 'tag'):
             raise tornado.web.HTTPError(400)
-        follow_key = {'user': 'following', 'activity': 'activity_following',
-                'tag': 'tags_following'}[follow_type]
+
         if follow_type != 'user':
             follow_id = ObjectId(follow_id)
         if not self.mongo[follow_type].find_one({'_id': follow_id}):
@@ -432,9 +434,13 @@ class PutFollowHandler(api_base.BaseHandler):
         if follow_type == 'activity':
             activity = self.mongo.activity.find_one({'_id':follow_id})
             if activity['type'] == 'people':
-                self.follow_to(login, 'following', 'user', activity['owner'], self.req['follow'])
+                self.follow_to(login, 'user', activity['owner'], self.req['follow'])
 
-        self.follow_to(login, follow_key, follow_type, follow_id, self.req['follow'])
+        if follow_type == 'user':
+            activity = self.mongo.activity.find_one({'owner': follow_id, 'type': 'people'})
+            self.follow_to(login, 'activity',  activity['_id'],  self.req['follow'])
+
+        self.follow_to(login, follow_type, follow_id, self.req['follow'])
 
 class CommentHandler(api_base.BaseHandler):
     """respond to an activity."""
